@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  python37:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: function.lambda_handler
+      Runtime: python3.7
+      CodeUri: .
+      Description: ''
+      MemorySize: 128
+      Timeout: 10
+      Role: 'arn:aws:iam::988149861097:role/service-role/S3Reader'
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /python37
+            Method: POST
+      ReservedConcurrentExecutions: 1
