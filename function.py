@@ -187,7 +187,7 @@ def generate_index(posts, path_prefix=""):
         return output.getvalue()
 
 def generate_frontpage(posts):
-    title = 'The blog archive';
+    title = 'The blog archiv<span id="ref">e</span>';
     with StringIO() as output:
         output.write(
             codecs.open(
@@ -200,6 +200,12 @@ def generate_frontpage(posts):
 <h1>{}</h1>""".format(title))
         output.write(generate_index(posts, OUTPUT+"/"))
         output.write("</div>")
+        output.write("""<script type="text/javascript">
+document.getElementById("ref").onclick = function() {
+    document.location = "/refresh";
+};
+</script>
+""")
         output.write(codecs.open(FOOT, mode="r", encoding="utf-8").read())
         return output.getvalue()
 
