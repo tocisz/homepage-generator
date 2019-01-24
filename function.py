@@ -188,13 +188,14 @@ def generate_index(posts, path_prefix=""):
 
 def generate_frontpage(posts):
     title = 'The blog archiv<span id="ref">e</span>';
+    title_clean = re.sub(r"<.*?>", "", title)
     with StringIO() as output:
         output.write(
             codecs.open(
                 HEAD,
                 mode="r",
                 encoding="utf-8"
-            ).read().format(title=title)
+            ).read().format(title=title_clean)
         )
         output.write("""<div class="container-fluid">
 <h1>{}</h1>""".format(title))
