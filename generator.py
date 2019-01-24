@@ -12,15 +12,12 @@ import boto3
 import botocore
 
 from dulwich import porcelain
+from config import config
 
-DATA_DIR = "/tmp/data"
 INPUT = "posts_source"
 OUTPUT = "posts"
 HEAD = "layouts/header.inc"
 FOOT = "layouts/footer.inc"
-
-with open(os.environ['LAMBDA_TASK_ROOT'] + '/config.json', 'r') as cf:
-    config = json.load(cf)
 
 s3 = boto3.client(
     's3',
@@ -211,14 +208,15 @@ document.getElementById("ref").onclick = function() {
         return output.getvalue()
 
 def checkout():
-    if Path(DATA_DIR).is_dir():
-        shutil.rmtree(DATA_DIR)
-        porcelain.clone(config["git"], DATA_DIR)
-        # porcelain.pull("data", config["git"])
+    if Path(config['data_dir']).is_dir():
+        shutil.rmtree(config['data_dir'])
+        porcelain.clone(config["git"], config['data_dir'])
+        # porcelain.pull(config['data_dir'], config["git"])
     else:
-        porcelain.clone(config["git"], DATA_DIR)
+        porcelain.clone(config["git"], config['data_dir'])
 
 def main():
+    os.chdir(config['data_dir'])
     print("Processing index.html")
     posts = [p for p in Path(INPUT).glob("*.md")]
     posts.sort()
@@ -226,53 +224,7 @@ def main():
     index = generate_index(posts)
     front = generate_frontpage(posts)
     upload_text("index.html", front)
-    
+
     upload_dir(INPUT, index, OUTPUT)
     upload_dir("css", index)
     upload_dir("404", index)
-
-def success(msg):
-    return {
-        "isBase64Encoded": False,
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        },
-        "body": json.dumps(msg)
-    }
-
-def error(msg):
-    return {
-        "isBase64Encoded": False,
-        "statusCode": 500,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        },
-        "body": json.dumps(msg)
-    }
-
-def denied(msg):
-    return {
-        "isBase64Encoded": False,
-        "statusCode": 403,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        },
-        "body": json.dumps(msg)
-    }
-
-def lambda_handler(event, context):
-    if event['body'] != '"ala ma kota"':
-        return denied("Bad authentication string")
-    try:
-        os.chdir("/tmp")
-        if "git" in config:
-            checkout()
-        os.chdir(DATA_DIR)
-        main()
-        return success('OK')
-    except Exception as e:
-        return error(getattr(e, 'message', repr(e)))

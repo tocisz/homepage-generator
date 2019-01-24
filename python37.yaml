@@ -5,7 +5,7 @@ Resources:
   python37:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: function.lambda_handler
+      Handler: lambda.handler
       Runtime: python3.7
       CodeUri: .
       Description: ''

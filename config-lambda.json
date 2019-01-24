@@ -1,0 +1,12 @@
+{
+  "region": "eu-west-1",
+  "bucket": "tomasz-cichocki.pl",
+  "git": "https://github.com/tocisz/homepage-data.git",
+  "data_dir": "/tmp/data",
+  "suffix_to_type": {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".svg": "image/svg+xml",
+    ".css": "text/css"
+  }
+}
