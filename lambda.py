@@ -25,7 +25,7 @@ def denied(msg):
     return response(403, msg)
 
 def handler(event, context):
-    if event['body'] != '"ala ma kota"':
+    if event['body'] != json.dumps(config['password']):
         return denied("Bad authentication string")
     try:
         if "git" in config:
