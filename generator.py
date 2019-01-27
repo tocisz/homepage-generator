@@ -16,6 +16,12 @@ OUTPUT = "posts"
 HEAD = "layouts/header.inc"
 FOOT = "layouts/footer.inc"
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+env = Environment(
+    loader=FileSystemLoader(os.path.join(config['data_dir'], 'templates')),
+    autoescape=select_autoescape(['html', 'xml'])
+)
+
 def title_from_path(input):
     return re.sub(r'.md$','', input.name).replace("-", " ")
 
@@ -31,7 +37,7 @@ if 'bucket' in config:
 else:
     storage = storage.FileStorage()
 
-def process(input, index, outdir):
+def process(input, posts, outdir):
     fout = short_article_path(input)
     title = title_from_path(input)
     text = input.open(mode="r", encoding="utf-8").read()
@@ -40,84 +46,49 @@ def process(input, index, outdir):
         extensions = ['extra','meta'],
         output_format="html5"
     )
-    with StringIO() as output:
-        output.write(
-            codecs.open(
-                HEAD,
-                mode="r",
-                encoding="utf-8"
-            ).read().format(title=title)
-        )
-        output.write("""<div class="container-fluid">
-  <div class="row">
-    <div class="col-12 col-md-3 push-md-9 bd-sidebar">
-""")
-        output.write(index)
-        output.write("""    </div>
-    <div class="col-12 col-md-9 pull-md-3 bd-content">
-""")
-        output.write(html)
-        output.write("""    </div>
-  </div>
-</div>
-""")
-        output.write(codecs.open(FOOT, mode="r", encoding="utf-8").read())
-        body = output.getvalue()
-
+    body = env.get_template("post.html").render(
+        title = title,
+        cssdir = "../css",
+        content = html,
+        posts = [
+            {
+                "title" : title_from_path(p),
+                "name" : short_article_path(p),
+            } for p in posts
+        ]
+    )
     key = outdir + '/' + fout
     storage.upload_text(key, body)
 
-def upload_dir(dir, index, outdir=None):
+def upload_dir(dir, posts = [], outdir=None):
     print("Going into {}".format(dir))
     if outdir is None:
         outdir = dir
     for f in Path(dir).glob("*"):
         if f.suffix == '.md':
             print("Processing {}".format(f.name))
-            process(f, index, outdir)
+            process(f, posts, outdir)
         elif f.is_file():
             print("Uploading {}".format(f.name))
             storage.upload_file(f, outdir)
 
-def generate_index(posts, path_prefix=""):
-    with StringIO() as output:
-        output.write("<p>")
-        if len(posts) > 0:
-            output.write("<ul>")
-        for f in posts:
-            output.write("<li><a href=\"{path}\">{title}</a></li>".format(
-                    path = path_prefix + short_article_path(f),
-                    title = title_from_path(f)
-                )
-            )
-        if len(posts) > 0:
-            output.write("</ul>")
-        output.write("</p>")
-        return output.getvalue()
+def generate_index(posts):
+    return env.get_template("index.html").render(
+        title = "The blog archive",
+        cssdir = "css",
+        posts = [
+            {
+                "name" : short_article_path(p),
+                "title" : title_from_path(p)
+            } for p in posts
+        ]
+    )
 
-def generate_frontpage(posts):
-    title = 'The blog archiv<span id="ref">e</span>';
-    title_clean = re.sub(r"<.*?>", "", title)
-    with StringIO() as output:
-        output.write(
-            codecs.open(
-                HEAD,
-                mode="r",
-                encoding="utf-8"
-            ).read().format(title=title_clean)
-        )
-        output.write("""<div class="container-fluid">
-<h1>{}</h1>""".format(title))
-        output.write(generate_index(posts, OUTPUT+"/"))
-        output.write("</div>")
-        output.write("""<script type="text/javascript">
-document.getElementById("ref").onclick = function() {
-    document.location = "/refresh";
-};
-</script>
-""")
-        output.write(codecs.open(FOOT, mode="r", encoding="utf-8").read())
-        return output.getvalue()
+def generate_refresh():
+    return env.get_template("refresh.html").render(
+        title = "Refresh page",
+        cssdir = "css"
+    )
 
 def checkout():
     if Path(config['data_dir']).is_dir():
@@ -129,17 +100,16 @@ def checkout():
 
 def main():
     os.chdir(config['data_dir'])
-    print("Processing index.html")
     posts = [p for p in Path(INPUT).glob("*.md")]
     posts.sort()
     posts.reverse()
-    index = generate_index(posts)
-    front = generate_frontpage(posts)
-    storage.upload_text("index.html", front)
 
-    upload_dir(INPUT, index, OUTPUT)
-    upload_dir("css", index)
-    upload_dir("404", index)
+    storage.upload_text("index.html", generate_index(posts))
+    storage.upload_text("refresh.html", generate_refresh())
+
+    upload_dir(INPUT, posts, OUTPUT)
+    upload_dir("css")
+    upload_dir("404")
 
 if __name__ == "__main__":
     main()

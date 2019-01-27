@@ -13,21 +13,19 @@ class S3Storage:
     # Size of parts when uploading in parts
     AWS_UPLOAD_PART_SIZE = 6 * 1024 * 1024
 
-    if 'key' in config:
-        s3 = boto3.client(
-            's3',
-            config['region'],
-            aws_access_key_id = config['key'],
-            aws_secret_access_key = config['secret']
-        )
-    else:
-        s3 = boto3.client(
-            's3',
-            config['region']
-        )
-
-    # def __init__(self):
-    #    s3
+    def __init__(self):
+        if 'key' in config:
+            self.s3 = boto3.client(
+                's3',
+                config['region'],
+                aws_access_key_id = config['key'],
+                aws_secret_access_key = config['secret']
+            )
+        else:
+            self.s3 = boto3.client(
+                's3',
+                config['region']
+            )
 
     def s3_etag(self, key):
         try:
