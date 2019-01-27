@@ -5,11 +5,8 @@ import re
 import codecs
 import markdown
 from io import StringIO
-import hashlib
 
 import json
-import boto3
-import botocore
 
 from dulwich import porcelain
 from config import config
@@ -19,82 +16,20 @@ OUTPUT = "posts"
 HEAD = "layouts/header.inc"
 FOOT = "layouts/footer.inc"
 
-s3 = boto3.client(
-    's3',
-    config['region'],
-    # aws_access_key_id = config['key'],
-    # aws_secret_access_key = config['secret']
-)
-#site = s3.Bucket(config['bucket'])
-
 def title_from_path(input):
     return re.sub(r'.md$','', input.name).replace("-", " ")
 
 def short_article_path(input):
-    return re.sub(r'.md$','', input.name)
+    path = re.sub(r'.md$','', input.name)
+    if 'bucket' not in config:
+        path += ".html"
+    return path
 
-def s3_etag(key):
-    try:
-        return s3.head_object(
-            Bucket = config['bucket'],
-            Key = key
-        )['ETag'][1:-1]
-    except botocore.exceptions.ClientError:
-        return None
-
-# Max size in bytes before uploading in parts.
-AWS_UPLOAD_MAX_SIZE = 20 * 1024 * 1024
-# Size of parts when uploading in parts
-AWS_UPLOAD_PART_SIZE = 6 * 1024 * 1024
-
-# Purpose : Get the md5 hash of a file stored in S3
-# Returns : Returns the md5 hash that will match the ETag in S3
-def local_etag(sourcePath):
-    filesize = os.path.getsize(sourcePath)
-    hash = hashlib.md5()
-
-    if filesize > AWS_UPLOAD_MAX_SIZE:
-
-        block_count = 0
-        md5string = ""
-        with open(sourcePath, "rb") as f:
-            for block in iter(lambda: f.read(AWS_UPLOAD_PART_SIZE), ""):
-                hash = hashlib.md5()
-                hash.update(block)
-                md5string = md5string + hash.digest()
-                block_count += 1
-
-        hash = hashlib.md5()
-        hash.update(md5string)
-        return hash.hexdigest() + "-" + str(block_count)
-
-    else:
-        with open(sourcePath, "rb") as f:
-            for block in iter(lambda: f.read(AWS_UPLOAD_PART_SIZE), b""):
-                hash.update(block)
-        return hash.hexdigest()
-
-def upload_text(key, body):
-    md5 = hashlib.md5(body.encode('utf-8')).hexdigest()
-    etag = s3_etag(key)
-    if md5 != etag:
-        print("MD5: {}".format(md5))
-        print("etag: {}".format(etag))
-        s3.put_object(
-            Bucket = config['bucket'],
-            Key = key,
-            Body = body,
-            ACL = 'public-read',
-            ContentType = 'text/html'
-        )
-        s3.put_object(
-            Bucket = config['bucket'],
-            Key = 't/' + key,
-            ACL = 'public-read',
-            WebsiteRedirectLocation = '/'+ key
-        )
-    else:
-        print("Checksums match. Not uploading.")
+import storage
+if 'bucket' in config:
+    storage = storage.S3Storage()
+else:
+    storage = storage.FileStorage()
 
 def process(input, index, outdir):
     fout = short_article_path(input)
@@ -130,30 +65,7 @@ def process(input, index, outdir):
         body = output.getvalue()
 
     key = outdir + '/' + fout
-    upload_text(key, body)
-
-def upload_file(f, outdir):
-    md5 = local_etag(f)
-    etag = s3_etag(outdir + '/' + f.name)
-    if md5 != etag:
-        print("MD5: {}".format(md5))
-        print("etag: {}".format(etag))
-        if f.suffix in config['suffix_to_type']:
-            ct = config['suffix_to_type'][f.suffix]
-        else:
-            ct = 'application/octet-stream'
-        print("Uploading as {}".format(ct))
-        with f.open('rb') as fo:
-            s3.put_object(
-                Bucket = config['bucket'],
-                Key = outdir + '/' + f.name,
-                Body = fo,
-                ACL = 'public-read',
-                ContentType = ct
-            )
-    else:
-        print("Checksums match. Not uploading.")
-    # shutil.copy(f, os.path.join(OUTPUT,f.name))
+    storage.upload_text(key, body)
 
 def upload_dir(dir, index, outdir=None):
     print("Going into {}".format(dir))
@@ -165,7 +77,7 @@ def upload_dir(dir, index, outdir=None):
             process(f, index, outdir)
         elif f.is_file():
             print("Uploading {}".format(f.name))
-            upload_file(f, outdir)
+            storage.upload_file(f, outdir)
 
 def generate_index(posts, path_prefix=""):
     with StringIO() as output:
@@ -223,8 +135,11 @@ def main():
     posts.reverse()
     index = generate_index(posts)
     front = generate_frontpage(posts)
-    upload_text("index.html", front)
+    storage.upload_text("index.html", front)
 
     upload_dir(INPUT, index, OUTPUT)
     upload_dir("css", index)
     upload_dir("404", index)
+
+if __name__ == "__main__":
+    main()
