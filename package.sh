@@ -14,7 +14,7 @@ create_zip() {
   cp config-local.json config.json
 }
 
-if [ $1 == "update" ]
+if [ "$1" == "update" ]
 then update_package
 else create_zip
 fi
