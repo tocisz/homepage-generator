@@ -1,6 +1,5 @@
-package
+python
 __pycache__
-data
 config.json
 config-local.json
 *.zip

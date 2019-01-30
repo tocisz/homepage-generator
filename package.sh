@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 update_package() {
-  rm -rf package
-  pip install -r requirements.txt --target package
+  rm -rf python lib-layer.zip
+  pip install -r requirements.txt --target python/lib/python3.7/site-packages
+  zip -r9 lib-layer.zip python
 }
 
 create_zip() {
   rm lambda.zip
-  cd package
-  zip -r9 ../lambda.zip .
-  cd ..
   cp config-lambda.json config.json
-  zip -g lambda.zip *.py config.json
+  zip lambda.zip *.py config.json
   cp config-local.json config.json
 }
 
