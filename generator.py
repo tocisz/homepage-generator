@@ -43,7 +43,7 @@ def process(input, posts, outdir):
     text = input.open(mode="r", encoding="utf-8").read()
     html = markdown.markdown(
         text,
-        extensions = ['extra','meta'],
+        extensions = ['extra','meta','codehilite'],
         output_format="html5"
     )
     body = env.get_template("post.html").render(
