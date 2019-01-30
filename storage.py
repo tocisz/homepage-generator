@@ -109,7 +109,8 @@ class S3Storage:
         # shutil.copy(f, os.path.join(OUTPUT,f.name))
 
 class FileStorage:
-    dir = config['out_dir']
+    def __init__(self):
+        self.dir = config['out_dir']
 
     def upload_text(self, key, body):
         if '/' in key:
