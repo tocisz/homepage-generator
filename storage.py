@@ -87,7 +87,11 @@ class S3Storage:
 
     def upload_file(self, f, outdir):
         md5 = self.local_etag(f)
-        etag = self.s3_etag(outdir + '/' + f.name)
+        if outdir == "":
+            key = f.name
+        else:
+            key = outdir + '/' + f.name
+        etag = self.s3_etag(key)
         if md5 != etag:
             print("MD5: {}".format(md5))
             print("etag: {}".format(etag))
@@ -99,7 +103,7 @@ class S3Storage:
             with f.open('rb') as fo:
                 self.s3.put_object(
                     Bucket = config['bucket'],
-                    Key = outdir + '/' + f.name,
+                    Key = key,
                     Body = fo,
                     ACL = 'public-read',
                     ContentType = ct
