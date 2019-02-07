@@ -1,5 +1,6 @@
 from config import config
 import generator
+import stats
 
 import os
 import json
@@ -32,6 +33,9 @@ def handler(event, context):
             generator.checkout()
         os.chdir(config['data_dir'])
         generator.main()
-        return success('OK')
+        return success({
+            'articles_updated': stats.articles_updated,
+            'files_uploaded': stats.files_uploaded
+        })
     except Exception as e:
         return error(getattr(e, 'message', repr(e)))

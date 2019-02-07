@@ -10,6 +10,7 @@ import json
 
 from dulwich import porcelain
 from config import config
+import stats
 
 INPUT = "posts_source"
 OUTPUT = "posts"
@@ -72,7 +73,7 @@ def process(input, posts, outdir):
         ]
     )
     key = outdir + '/' + fout
-    storage.upload_text(key, body)
+    storage.upload_text(key, body, is_article = True)
     return meta
 
 def upload_dir(dir, posts = [], outdir=None):
@@ -131,7 +132,9 @@ def main():
         print("Uploading favicon.ico")
         storage.upload_file(ico, "")
 
-    storage.upload_text("rss.xml", rss.generate())
+    if stats.articles_updated != 0:
+        print("Uploading rss.xml")
+        storage.upload_text("rss.xml", rss.generate())
 
 if __name__ == "__main__":
     main()

@@ -6,6 +6,7 @@ import hashlib
 from pathlib import Path
 
 from config import config
+import stats
 
 class S3Storage:
     # Max size in bytes before uploading in parts.
@@ -63,7 +64,7 @@ class S3Storage:
                     hash.update(block)
             return hash.hexdigest()
 
-    def upload_text(self, key, body):
+    def upload_text(self, key, body, is_article = False):
         md5 = hashlib.md5(body.encode('utf-8')).hexdigest()
         etag = self.s3_etag(key)
         if key.endswith("rss.xml"):
@@ -86,6 +87,10 @@ class S3Storage:
                 ACL = 'public-read',
                 WebsiteRedirectLocation = '/'+ key
             )
+            if is_article:
+                stats.article_updated()
+            else:
+                stats.file_uploaded()
         else:
             print("Checksums match. Not uploading.")
 
@@ -112,6 +117,7 @@ class S3Storage:
                     ACL = 'public-read',
                     ContentType = ct
                 )
+            stats.file_uploaded()
         else:
             print("Checksums match. Not uploading.")
         # shutil.copy(f, os.path.join(OUTPUT,f.name))
