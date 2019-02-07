@@ -9,5 +9,13 @@
     ".svg": "image/svg+xml",
     ".ico": "image/x-icon",
     ".css": "text/css"
+  },
+  "rss": {
+    "url": "https://tomasz-cichocki.pl/",
+    "posts_dir": "posts/",
+    "author": "Tomasz Cichocki",
+    "title": "Scrap Electronics blog",
+    "description": "This is my hobby blog. It's mainly about scrap electornic projects...",
+    "lang": "en-US"
   }
 }

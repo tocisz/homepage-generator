@@ -66,6 +66,10 @@ class S3Storage:
     def upload_text(self, key, body):
         md5 = hashlib.md5(body.encode('utf-8')).hexdigest()
         etag = self.s3_etag(key)
+        if key.endswith("rss.xml"):
+            mimetype = 'application/rss+xml'
+        else:
+            mimetype = 'text/html'
         if md5 != etag:
             print("MD5: {}".format(md5))
             print("etag: {}".format(etag))
@@ -74,7 +78,7 @@ class S3Storage:
                 Key = key,
                 Body = body,
                 ACL = 'public-read',
-                ContentType = 'text/html'
+                ContentType = mimetype
             )
             self.s3.put_object(
                 Bucket = config['bucket'],

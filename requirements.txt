@@ -2,3 +2,4 @@ markdown
 dulwich
 jinja2
 pygments
+rfeed

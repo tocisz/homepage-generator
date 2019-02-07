@@ -37,19 +37,33 @@ if 'bucket' in config:
 else:
     storage = storage.FileStorage()
 
+md = markdown.Markdown(
+    extensions = ['extra','meta','codehilite'],
+    output_format="html5"
+)
+
+import rss
+rss = rss.Rss()
+
 def process(input, posts, outdir):
     fout = short_article_path(input)
     title = title_from_path(input)
     text = input.open(mode="r", encoding="utf-8").read()
-    html = markdown.markdown(
-        text,
-        extensions = ['extra','meta','codehilite'],
-        output_format="html5"
-    )
+    html = md.convert(text)
+    meta = md.Meta
+    meta['title'] = title
+    meta['url'] = fout
+    if 'author' not in meta:
+        meta['author'] = config['rss']['author']
+    if 'date' in meta:
+        meta['date'] = meta['date'][0]
+    if 'abstract' in meta:
+        meta['abstract'] = " ".join(meta['abstract'])
     body = env.get_template("post.html").render(
         title = title,
         cssdir = "../css",
         content = html,
+        meta = meta,
         posts = [
             {
                 "title" : title_from_path(p),
@@ -59,6 +73,7 @@ def process(input, posts, outdir):
     )
     key = outdir + '/' + fout
     storage.upload_text(key, body)
+    return meta
 
 def upload_dir(dir, posts = [], outdir=None):
     print("Going into {}".format(dir))
@@ -67,7 +82,7 @@ def upload_dir(dir, posts = [], outdir=None):
     for f in Path(dir).glob("*"):
         if f.suffix == '.md':
             print("Processing {}".format(f.name))
-            process(f, posts, outdir)
+            rss.append(process(f, posts, outdir))
         elif f.is_file():
             print("Uploading {}".format(f.name))
             storage.upload_file(f, outdir)
@@ -115,6 +130,8 @@ def main():
     if ico.exists():
         print("Uploading favicon.ico")
         storage.upload_file(ico, "")
+
+    storage.upload_text("rss.xml", rss.generate())
 
 if __name__ == "__main__":
     main()
