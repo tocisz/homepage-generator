@@ -111,5 +111,10 @@ def main():
     upload_dir("css")
     upload_dir("404")
 
+    ico = Path(config['data_dir']+"/favicon.ico")
+    if ico.exists():
+        print("Uploading favicon.ico")
+        storage.upload_file(ico, "")
+
 if __name__ == "__main__":
     main()
