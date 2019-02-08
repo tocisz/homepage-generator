@@ -126,7 +126,7 @@ class FileStorage:
     def __init__(self):
         self.dir = config['out_dir']
 
-    def upload_text(self, key, body):
+    def upload_text(self, key, body, is_article = False):
         if '/' in key:
             d = '/'.join(key.split('/')[0:-1])
             p = os.path.join(self.dir, d)
@@ -134,12 +134,17 @@ class FileStorage:
                 os.makedirs(p)
         with open(os.path.join(self.dir, key), 'wb') as f:
             f.write(body.encode())
+        if is_article:
+            stats.article_updated()
+        else:
+            stats.file_uploaded()
 
     def upload_file(self, f, outdir):
         p = os.path.join(self.dir, outdir)
         if not os.path.exists(p):
             os.makedirs(p)
         shutil.copy(f, os.path.join(p, f.name))
+        stats.file_uploaded()
 
 if __name__ == "__main__":
     # s = S3Storage()
