@@ -22,11 +22,12 @@ class Rss:
         ))
 
     def generate(self):
+        self.list.sort(key=lambda item: item.pubDate, reverse=True)
         feed = Feed(
             title = config['rss']['title'],
             link = config['rss']['url'],
             description = config['rss']['description'],
             language = config['rss']['lang'],
             lastBuildDate = datetime.datetime.now(),
-            items = self.list[::-1])
+            items = self.list)
         return feed.rss()
