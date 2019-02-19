@@ -14,8 +14,6 @@ import stats
 
 INPUT = "posts_source"
 OUTPUT = "posts"
-HEAD = "layouts/header.inc"
-FOOT = "layouts/footer.inc"
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 env = Environment(
