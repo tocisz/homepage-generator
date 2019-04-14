@@ -61,6 +61,7 @@ def process(input, posts, outdir):
     body = env.get_template("post.html").render(
         title = title,
         cssdir = "../css",
+        jsdir = "../js",
         content = html,
         meta = meta,
         posts = [
@@ -90,6 +91,7 @@ def generate_index(posts):
     return env.get_template("index.html").render(
         title = "The blog archive",
         cssdir = "css",
+        jsdir = "js",
         posts = [
             {
                 "name" : short_article_path(p),
@@ -101,7 +103,8 @@ def generate_index(posts):
 def generate_refresh():
     return env.get_template("refresh.html").render(
         title = "Refresh page",
-        cssdir = "css"
+        cssdir = "css",
+        jsdir = "js"
     )
 
 def checkout():
@@ -123,6 +126,7 @@ def main():
 
     upload_dir(INPUT, posts, OUTPUT)
     upload_dir("css")
+    upload_dir("js")
     upload_dir("404")
 
     ico = Path(config['data_dir']+"/favicon.ico")
