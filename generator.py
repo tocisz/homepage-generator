@@ -22,13 +22,18 @@ env = Environment(
 )
 
 def title_from_path(input):
-    return re.sub(r'.md$','', input.name).replace("-", " ")
+    return re.sub(r'.md$', '', input.name).replace("-", " ")
 
 def short_article_path(input):
-    path = re.sub(r'.md$','', input.name)
+    path = re.sub(r'.md$', '', input.name)
     if 'bucket' not in config:
         path += ".html"
     return path
+
+def numeric_id(input):
+    name = re.sub(r'.md$', '', input.name)
+    num = re.sub(r'-.*$', '', name)
+    return num
 
 import storage
 if 'bucket' in config:
@@ -64,6 +69,8 @@ def process(input, posts, outdir):
         jsdir = "../js",
         content = html,
         meta = meta,
+        disqs_url = config['rss']['url']+config['rss']['posts_dir']+fout,
+        disqs_id = numeric_id(input),
         posts = [
             {
                 "title" : title_from_path(p),
