@@ -42,7 +42,7 @@ else:
     storage = storage.FileStorage()
 
 md = markdown.Markdown(
-    extensions = ['extra','meta','codehilite'],
+    extensions = ['extra','meta','codehilite','toc'],
     output_format="html5"
 )
 
@@ -91,7 +91,7 @@ def upload_dir(dir, posts = [], outdir=None):
             print("Processing {}".format(f.name))
             rss.append(process(f, posts, outdir))
         elif f.is_file():
-            print("Uploading {}".format(f.name))
+            print("Examining {}".format(f.name))
             storage.upload_file(f, outdir)
 
 def generate_index(posts):
@@ -138,11 +138,11 @@ def main():
 
     ico = Path(config['data_dir']+"/favicon.ico")
     if ico.exists():
-        print("Uploading favicon.ico")
+        print("Examining favicon.ico")
         storage.upload_file(ico, "")
 
     if stats.articles_updated != 0:
-        print("Uploading rss.xml")
+        print("Examining rss.xml")
         storage.upload_text("rss.xml", rss.generate())
 
 if __name__ == "__main__":
