@@ -63,6 +63,8 @@ def process(input, posts, outdir):
         meta['date'] = meta['date'][0]
     if 'abstract' in meta:
         meta['abstract'] = " ".join(meta['abstract'])
+    if 'image' in meta:
+        meta['image'] = config['rss']['url']+config['rss']['posts_dir']+meta['image'][0]
     body = env.get_template("post.html").render(
         title = title,
         cssdir = "../css",

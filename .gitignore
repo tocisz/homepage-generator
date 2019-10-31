@@ -1,5 +1,7 @@
 python
 __pycache__
+package
 config.json
 config-local.json
+config-remote.json
 *.zip
