@@ -77,6 +77,7 @@ def process(input, posts, outdir):
             {
                 "title" : title_from_path(p),
                 "name" : short_article_path(p),
+                "active": title_from_path(p) == title
             } for p in posts
         ]
     )
